@@ -3,35 +3,21 @@
 #include "src/matrix_config.h"
 #include <Arduino.h>
 
-/*/
-character dimensions
-must match font metrics (6×8)
-charW/charH used via CHAR_W/CHAR_H
-/*/
+// char dimensions: 6x8 pixels
 const uint8_t charW = 6;
 const uint8_t charH = 8;
 
-/*/
-matrix wiring
-define rgb and address pin arrays, plus clock/latch/oe
-/*/
+// matrix wiring pins
 uint8_t rgbPins[]  = {7,  8,  9, 10, 11, 12};
 uint8_t addrPins[] = {17, 18, 19, 20, 21};
 uint8_t clockPin   = 14;
 uint8_t latchPin   = 15;
 uint8_t oePin      = 16;
 
-/*/
-serial buffer pointer
-initialize to nullptr; main .ino will allocate size into buf
-/*/
+// serial buffer pointer (allocated in .ino)
 char *buf = nullptr;
 
-/*/
-matrix instance
-WIDTH×HEIGHT, 6 rgb pins, 1 chain, 5 addr pins,
-clockPin, latchPin, oePin, double-buffer enabled
-/*/
+// protomatter matrix instance
 Adafruit_Protomatter matrix(
   WIDTH, 6, 1,
   rgbPins, 4, addrPins,

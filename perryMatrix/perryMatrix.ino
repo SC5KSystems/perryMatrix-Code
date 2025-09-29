@@ -7,14 +7,16 @@
 #include "src/boot_sequence.h"
 #include "src/autonomous.h"
 #include "src/dynamic.h"
+#include "src/shutdown.h"
 
 void setup() {
-  // USB & RoboRIO serial
+  // init usb and RoboRIO serial
   Serial.begin(115200);
   Serial1.begin(9600);
   delay(500);
-  Serial.setTimeout(2000);
-  Serial1.setTimeout(2000);
+  // set short serial timeouts (~50ms) to avoid partial lines from RoboRIO
+  Serial.setTimeout(50);
+  Serial1.setTimeout(50);
   if (Serial) {
     Serial.println("USB serial active");
     Serial.println("RoboRIO serial active");
@@ -40,22 +42,27 @@ void loop() {
   // 2) run per‐mode logic
   switch (currentMode) {
     case MODE_CHECKLIST:
-      // checklist mode: update or animate checklist and subsequent scroller/perry/audio
+    // checklist mode: update checklist and run scroller/perry/audio
       runBootSequence();
       break;
 
     case MODE_AUTONOMOUS:
-      // autonomous mode: show AUTO LOCK animation until duration expires
+    // autonomous mode: run auto animation while active
       if (autoActive) runAutonomousFrame();
       break;
 
     case MODE_DYNAMIC:
-      // dynamic mode: continuously render network + accel/AI/cube as enabled
+    // dynamic mode: draw network and optional accel/AI/cube
       runDynamicFrame();
       break;
 
+    case MODE_SHUTDOWN:
+    // shutdown mode: draw match over header and scroll fake code
+      runShutdownFrame();
+      break;
+
     default:
-      // MODE_NULL or any undefined mode: remain blank
+    // MODE_NULL or undefined: do nothing
       break;
   }
 }

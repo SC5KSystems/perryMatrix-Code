@@ -6,12 +6,7 @@
 #include <string.h>
 #include <Arduino.h>
 
-/*/
-initPerryLoader
-measure each line’s length, reset write/decrypt indices & flags,
-set timing (p_lastUpdate, p_lastObf, p_startObf using IPAU), compute
-vertical centering (p_yStart,p_lineGap), then clear screen
-/*/
+// initPerryLoader: measure line lengths, reset indices, set timing, center text and clear screen
 void initPerryLoader() {
   // reset lengths and decryption state
   for (uint8_t i = 0; i < perryLineCount4; i++) {
@@ -43,19 +38,12 @@ void initPerryLoader() {
   matrix.fillScreen(0);
 }
 
-/*/
-getRandomCharacterP
-return a random printable ascii (33–126) for obfuscation glyphs
-/*/
+// getRandomCharacterP: return a random printable ASCII char (33–126)
 char getRandomCharacterP() {
   return (char)random(33, 127);
 }
 
-/*/
-writeEncryptedText4
-type out perry lines one char at a time as random glyphs,
-advance write index and show; stop when all chars done
-/*/
+// writeEncryptedText4: type lines one char at a time as random glyphs
 void writeEncryptedText4() {
   unsigned long t = millis();
   if (t - p_lastUpdate < WDEL) return;
@@ -80,11 +68,7 @@ void writeEncryptedText4() {
   p_writing = false;
 }
 
-/*/
-displayRandomText4
-render full lines with decrypted chars (blue) vs random glyphs (gold),
-then show
-/*/
+// displayRandomText4: draw lines mixing decrypted chars (blue) and random glyphs (gold)
 void displayRandomText4() {
   matrix.fillScreen(0);
   int sw = matrix.width();
@@ -108,11 +92,7 @@ void displayRandomText4() {
   matrix.show();
 }
 
-/*/
-updateDecryption4
-reveal one random char per call by setting perryDec/ perryDone,
-when all chars of a line done increment p_linesDone, then redraw
-/*/
+// updateDecryption4: reveal one random char per call and refresh display
 void updateDecryption4() {
   for (uint8_t i = 0; i < perryLineCount4; i++) {
     if (perryDone[i] < perryLens4[i]) {

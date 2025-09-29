@@ -3,23 +3,11 @@
 #pragma once
 #include <Arduino.h>
 
-/*/
-handleRobotMessage
-read from usb/robotio serial, parse mode and optional payload,
-switch currentMode and call init/process routines accordingly
-/*/
+// handleRobotMessage: read serial, parse mode/payload and dispatch
 void handleRobotMessage();
 
-/*/
-initBootSequence
-run one-time startup animations: splash text, type options, progressive outline,
-blink “LED”, (color test block left intact), then initial checklist write-on
-/*/
+// initBootSequence: run startup animations (splash, options, outline, LED blink, colour test) then draw initial checklist
 void initBootSequence();
 
-/*/
-runBootSequence
-called in loop when in checklist mode: read/process checklist payload,
-then sequence sponsor scroller → perry loader → audio vis based on state
-/*/
+// runBootSequence: in checklist mode, run sponsor scroller, perry loader and audio vis based on state
 void runBootSequence();

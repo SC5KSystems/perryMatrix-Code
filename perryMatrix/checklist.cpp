@@ -7,10 +7,7 @@
 #include <Arduino.h>
 #include <string.h>
 
-/*/
-drawDashedOutline
-iterate perimeter, drawing pixel every 3 steps, wrapping around edges
-/*/
+// draw dashed outline: iterate around rectangle and draw dash segments
 void drawDashedOutline(int bx, int by, int bw, int bh,
                        int perim, int offset, uint16_t color) {
   for (int pos = 0; pos < perim; pos++) {
@@ -32,10 +29,7 @@ void drawDashedOutline(int bx, int by, int bw, int bh,
   }
 }
 
-/*/
-sweepBoxLR
-fill a vertical bar segment of box idx from left to right in color
-/*/
+// sweep box left→right: animate vertical fill of a checklist box
 void sweepBoxLR(uint8_t idx, uint16_t color) {
   uint16_t sw = matrix.width();
   int16_t lx = (sw - chkBoxW)/2;
@@ -48,10 +42,7 @@ void sweepBoxLR(uint8_t idx, uint16_t color) {
   }
 }
 
-/*/
-sweepBoxRL
-fill a vertical bar segment of box idx from right to left in color
-/*/
+// sweep box right→left: animate vertical fill of a checklist box
 void sweepBoxRL(uint8_t idx, uint16_t color) {
   uint16_t sw = matrix.width();
   int16_t lx = (sw - chkBoxW)/2;
@@ -64,11 +55,7 @@ void sweepBoxRL(uint8_t idx, uint16_t color) {
   }
 }
 
-/*/
-drawChecklistStatic
-clear screen, draw “MATCH SETUP” header, each item + colored box,
-and bottom “NOT READY” if not all checked
-/*/
+// draw static checklist: header, items with coloured boxes, and not ready text
 void drawChecklistStatic() {
   matrix.fillScreen(0);
   matrix.setTextColor(matrix.color565(255,255,255));
@@ -111,12 +98,7 @@ void drawChecklistStatic() {
   matrix.show();
 }
 
-/*/
-processChecklistPayload
-parse payload CSV of 0/1 into states[], handle immediate redraw
-on drop from all-green, then detect changed boxes, animate them,
-and flash bottom NOT/READY based on new state
-/*/
+// process checklist payload: parse csv flags, update states, animate changes and update ready status
 void processChecklistPayload(const char* payload) {
   // parse CSV
   int states[numChecklist] = {0};
@@ -259,21 +241,84 @@ void processChecklistPayload(const char* payload) {
   }
 }
 
-/*/
-readAndProcess
-grab all available bytes until '\\n' into buf, null-terminate, log, then forward to processing
-/*/
+// read and process: read a line from stream, log it and forward for processing
 void readAndProcess(Stream &in, const char *label) {
-  if (!in.available()) return;
-  int len = 0;
-  while (in.available()) {
-    len = in.readBytesUntil('\n', buf, sizeof(buf)-1);
+  // If dripFeedMode is enabled, only dispatch the most recent complete
+  // line per call to this function.  Otherwise, process each line
+  // as it arrives.  This prevents long queues of updates from
+  // saturating the animation pipeline when sensors toggle rapidly.
+  const size_t cap = 32;
+  static size_t fill = 0;
+  if (dripFeedMode) {
+    bool gotLine = false;
+    char lastLine[32];
+    while (in.available()) {
+      int b = in.read();
+      if (b < 0) break;
+      char c = (char)b;
+      if (c == '\r') continue;
+      if (c != '\n') {
+        if (fill < cap - 1) buf[fill++] = c;
+        continue;
+      }
+      // newline terminator
+      buf[fill] = '\0';
+      fill = 0;
+      if (buf[0] != '\0') {
+        strncpy(lastLine, buf, sizeof(lastLine));
+        lastLine[sizeof(lastLine)-1] = '\0';
+        gotLine = true;
+      }
+    }
+    if (gotLine) {
+      // log the raw line
+      Serial.print("received on ");
+      Serial.print(label);
+      Serial.print(" (drip): ");
+      Serial.println(lastLine);
+      // In drip mode, the message may include a mode prefix (0/1/2) and
+      // a space before the comma‑separated checklist data.  Skip the
+      // mode token so that the first number isn't misinterpreted as
+      // the first checklist entry.
+      char *p = lastLine;
+      // skip any leading spaces
+      while (*p == ' ') ++p;
+      // if the first token is a digit [0..2] followed by a space,
+      // advance past it; this preserves backward compatibility with
+      // debug lines that only contain checklist payloads
+      if ((p[0] == '0' || p[0] == '1' || p[0] == '2') && p[1] == ' ') {
+        p += 2;
+      }
+      // skip any additional spaces after the mode
+      while (*p == ' ') ++p;
+      // if there's no payload after the mode, don't update the checklist
+      if (*p != '\0') {
+        processChecklistPayload(p);
+      }
+    }
+  } else {
+    // Uses global buf (allocated with new char[32] in setup)
+    while (in.available()) {
+      int b = in.read();
+      if (b < 0) break;
+      char c = (char)b;
+
+      if (c == '\r') continue;
+      if (c != '\n') {
+        if (fill < cap - 1) buf[fill++] = c;
+        continue;
+      }
+
+      buf[fill] = '\0';
+      fill = 0;
+      if (buf[0] == '\0') continue;
+
+      Serial.print("received on ");
+      Serial.print(label);
+      Serial.print(": ");
+      Serial.println(buf);
+
+      processChecklistPayload(buf);
+    }
   }
-  if (len <= 0) return;
-  buf[len] = '\0';
-  Serial.print("received on ");
-  Serial.print(label);
-  Serial.print(": ");
-  Serial.println(buf);
-  processChecklistPayload(buf);
 }

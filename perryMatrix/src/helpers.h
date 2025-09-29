@@ -8,29 +8,17 @@
 #include <math.h>
 #include "matrix_config.h"
 
-/*
-  getRandomChar
-  return a random printable ascii character (codes 33–126)
-  used for obfuscation and scrambling text effects
-*/
+// getRandomChar: return a random printable ASCII char (33–126) for obfuscation
 inline char getRandomChar() {
   return (char)random(33, 127);
 }
 
-/*
-  color565
-  convenience wrapper around matrix.color565(r,g,b)
-  converts 8-bit r,g,b values to 16-bit rgb565 format
-*/
+// color565: wrap matrix.color565 to convert 8-bit RGB to 16-bit 565
 inline uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
   return matrix.color565(r, g, b);
 }
 
-/*
-  shuffleArray
-  perform in-place Fisher–Yates shuffle on a uint16_t array of length n
-  used in color-test, dynamic network, and loader obfuscation routines
-*/
+// shuffleArray: in-place fisher–yates shuffle on a uint16_t array
 inline void shuffleArray(uint16_t *arr, uint16_t n) {
   for (uint16_t i = n - 1; i > 0; i--) {
     uint16_t j = random(0, i + 1);
@@ -40,12 +28,7 @@ inline void shuffleArray(uint16_t *arr, uint16_t n) {
   }
 }
 
-/*
-  hsvToRgb
-  convert hue (0–360°), saturation (0–1), value (0–1)
-  into 0–255 r,g,b components
-  for smooth color transitions based on HSV space
-*/
+// hsvToRgb: convert HSV (0–360°,0–1,0–1) to 0–255 RGB values
 inline void hsvToRgb(float h, float s, float v,
                      uint8_t &r, uint8_t &g, uint8_t &b) {
   int   i = int(h / 60.0f) % 6;

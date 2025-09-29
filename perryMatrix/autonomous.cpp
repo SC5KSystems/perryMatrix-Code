@@ -6,10 +6,7 @@
 #include <Arduino.h>
 #include <math.h>
 
-/*/
-resetStar
-place a star at screen center with random direction and speed
-/*/
+// reset star: center star and randomize direction & speed
 void resetStar(Star &s) {
   int16_t cx = matrix.width()/2;
   int16_t cy = matrix.height()/2;
@@ -22,11 +19,7 @@ void resetStar(Star &s) {
   s.stepY = sin(ang) * speed;
 }
 
-/*/
-initAutonomous
-kick off autonomous: clear, flag active, reset clocks, seed stars & circles,
-compute layout coords for auto-lock box
-/*/
+// init autonomous: clear state, seed stars and circles, compute auto‑lock box coords
 void initAutonomous() {
   autoActive   = true;
   autoStarPrev = millis();
@@ -54,25 +47,17 @@ void initAutonomous() {
   startTime = millis();
 }
 
-/*/
-runAutonomousFrame
-update text blink, draw expanding circles, move stars, and render the auto-lock box
-over one cycle when starInterval elapses
-/*/
+// run autonomous frame: blink text, draw circles and stars, and draw auto‑lock box each cycle
 void runAutonomousFrame() {
   unsigned long now = millis();
 
-  /*/
-toggle blink state for AUTO text when interval reached
-  /*/
+  // toggle blink state for auto text
   if (now - autoTextPrev >= textInterval) {
     autoTextPrev = now;
     autoState = !autoState;
   }
 
-  /*/
-draw stars & circles once per starInterval tick
-  /*/
+  // update circles and stars each tick
   if (now - autoStarPrev >= starInterval) {
     autoStarPrev = now;
     matrix.fillScreen(matrix.color565(0,0,8));
@@ -118,9 +103,7 @@ draw stars & circles once per starInterval tick
       }
     }
 
-    /*/
-draw the "AUTO LOCK" box with bg + text colors per blink state
-    /*/
+    // draw the auto‑lock box with colours based on blink state
     uint16_t boxCol = autoState ?
       matrix.color565(255,255,0) : matrix.color565(255,0,0);
     uint16_t txtCol = autoState ?

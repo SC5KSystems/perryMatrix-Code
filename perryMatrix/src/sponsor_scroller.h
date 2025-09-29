@@ -7,27 +7,14 @@
 #include "globals.h"
 #include "helpers.h"
 
-/*/
-drawStaticHeader
-draw the “spon-” and “-sors” text at top and a dotted divider line
-/*/
+// drawStaticHeader: draw "spon-" and "-sors" at top plus dotted divider
 void drawStaticHeader();
 
-/*/
-wheel
-map 0–255 to an rgb565 rainbow color (red→green→blue cycle)
-/*/
+// wheel: map 0–255 to rainbow colour (red→green→blue)
 uint16_t wheel(uint8_t pos);
 
-/*/
-initSponsorScroller
-seed random, choose first sponsor, pick random x & hue, set y below screen
-/*/
+// initSponsorScroller: seed random and initialise first sponsor position
 void initSponsorScroller();
 
-/*/
-runSponsorScroller
-clear screen, draw current sponsor scrolling up, redraw header,
-then loop to next sponsor once off-screen
-/*/
+// runSponsorScroller: scroll sponsor up, draw header and cycle to next
 void runSponsorScroller();

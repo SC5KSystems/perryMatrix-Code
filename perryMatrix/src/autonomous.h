@@ -4,22 +4,11 @@
 #include "globals.h"
 #include <Arduino.h>
 
-/*/
-resetStar
-place star in center with random heading and speed for autonomous animation
-/*/
+// resetStar: center star with random heading and speed
 void resetStar(Star &s);
 
-/*/
-initAutonomous
-start autonomous mode: clear screen, reset timers, seed stars & circles,
-and compute positions for the \"AUTO LOCK\" box
-/*/
+// initAutonomous: activate autonomous mode; clear screen, reset timers, seed stars/circles and compute auto lock box
 void initAutonomous();
 
-/*/
-runAutonomousFrame
-render one frame of auto mode: toggle text, draw expanding circles,
-move stars, and display the \"AUTO LOCK\" box
-/*/
+// runAutonomousFrame: render one frame; toggle text, update circles/stars and draw auto lock box
 void runAutonomousFrame();

@@ -7,23 +7,15 @@
 #include <math.h>
 #include <Fonts/TomThumb.h>
 
-/*/
-app modes
-initial mode is null until a serial command arrives
-/*/
+// current and last app mode (initially null until serial command)
 Mode currentMode = MODE_NULL;
 Mode lastMode    = MODE_NULL;
 
-/*/
-dynamic mode: node-network & accelerometer
-set up segment heights, node array & animation frame counter,
-init LIS3DH over I2C, filters, acceleration storage,
-display toggles and cube geometry
-/*/
+// dynamic mode config: segment heights, node array, LIS3DH state, filters, accelerometer & cube settings
 const int16_t SEG_TOP_H   = 48;
 const int16_t SEG_MID_H   = 32;
 const int16_t SEG_BOT_H   = 48;
-const uint8_t NODE_COUNT  = 8;
+const uint8_t NODE_COUNT  = 12;
 Node       nodes[NODE_COUNT];
 uint8_t    netFrame       = 0;
 Adafruit_LIS3DH lis;
@@ -51,22 +43,14 @@ const float AXIS_V[3][3] = {
   {1.5f,0,0},{0,1.5f,0},{0,0,1.5f}
 };
 
-/*/
-checklist defaults
-labels, count, initial prevChecklist values,
-ready flag false until all ones, no timestamp
-/*/
+// checklist defaults: item labels, counts, previous values and ready flag
 const char*   checklistItems[] = { "PIECE","ELEV","ANGLE","FMS" };
 const uint8_t numChecklist      = 4;
 int           prevChecklist[4]  = {-1,-1,-1,-1};
 bool          gReadyState       = false;
 unsigned long readyTimestamp    = 0;
 
-/*/
-sponsor scroller initial state
-list of names, sponsorCount, scrolling index/pos/hue,
-not launched until checklist ready for 10s
-/*/
+// sponsor scroller state: names, count, current index/position/hue and launch flag
 const char*   sponsors[]    = {
   "Aechelon Technology","Horsey Tech","Lutheran High School",
   "Gene Haas Foundation","Huddleston Movers","SC5K Systems"
@@ -76,21 +60,14 @@ int16_t       currentSponsor= 0, yOffset=0, sponsorX=0;
 uint8_t       hueOffset     = 0;
 bool          sponsorLaunched = false;
 
-/*/
-perry loader timing constants
-controls the animation pacing and duration
-/*/
+// perry loader timing constants for pacing and duration
 const uint16_t IPAU = 1000;
 const uint16_t WDEL = 100;
 const uint16_t OSPD = 50;
 const uint16_t ADEL = 80;
 const uint16_t ODUR = 5000;
 
-/*/
-perry loader runtime state
-whether active, which sponsor, text lines & lengths,
-decryption flags/indices/count, and timers
-/*/
+// perry loader runtime state: active flag, current sponsor, lines/lengths, decryption flags, indices and timers
 bool    perryActive   = false;
 int     lastSponsor   = -1;
 const char* perryLines4[]    = { "Perry","The","Peri-","Scope" };
@@ -106,11 +83,7 @@ uint8_t p_linesDone = 0;
 int16_t p_yStart    = 0;
 int16_t p_lineGap   = 0;
 
-/*/
-audio visualizer buffers & settings
-FFT object, audioActive flag, duration,
-sampling arrays, bar metrics, peak trackers, smoothing
-/*/
+// audio visualizer state: FFT, audio flags, timing, sample buffers, bar metrics, peaks and smoothing
 ArduinoFFT<double> FFT(vReal, vImag, samples, samplingFrequency);
 bool        audioActive      = false;
 unsigned long audioStartTime= 0;
@@ -127,10 +100,7 @@ const int   smoothingFactor      = 4;
 double      smoothedInput[samples] = {0};
 const int   WAVE_X_SHIFT         = 0;
 
-/*/
-timing & layout
-defines delays, counts, scroll speeds, spacing constants
-/*/
+// timing and layout constants for boot screens, animations and spacing
 const unsigned long bootDelay            = 1000;
 const unsigned long dashDelayBefore      = 1000;
 const unsigned long dashedPhaseDuration = 500;
@@ -159,10 +129,7 @@ const uint8_t   pieceYOffset = 10;
 const uint8_t   chkBoxW      = 30;
 const uint8_t   chkBoxH      = 8;
 
-/*/
-autonomous mode data
-timers, intervals, state booleans, display text & positions
-/*/
+// autonomous mode data: timers, intervals, state flags, display text and positions
 unsigned long autoTextPrev      = 0;
 unsigned long textInterval      = 325;
 unsigned long autoStarPrev      = 0;
@@ -175,17 +142,40 @@ const char* line1               = "AUTO";
 const char* line2               = "LOCK";
 int16_t tX1=0, tX2=0, tY1=0, tY2=0, boxX=0, boxY=0, boxW=0, boxH=0;
 
-/*/
-starfield for autonomous
-preallocate MAX_STARS stars and dynamic circle radii
-/*/
+// starfield: preallocate stars array and dynamic circle radii
 Star    stars[MAX_STARS]       = {};
 const int DYN_CIRCLES          = 2;
 int       dynRadius[DYN_CIRCLES] = {0};
 const int maxDynRadius         = 50;
 
-/*/
-serial command buffer
-64-byte buffer for incoming line data
-/*/
+// ── dynamic ui flags & timers (request/intake/ai) ────────────────
+// request banner (FETCH/PIECE)
+bool         dynReqPiece    = false;   // robot requests a piece
+bool         dynReqState    = false;   // blink state for request swap
+unsigned long dynReqPrev    = 0;       // last toggle time
+uint16_t     dynReqInterval = 325;     // ms; matches AI swap cadence by default
+
+// intake override (piece detected in intake)
+bool         dynHasPiece      = false; // overrides request
+bool         dynHasBlink      = false; // 2× blink for intake text-only
+unsigned long dynHasPrev      = 0;     // last 2× toggle time
+bool         dynReqTextVisible = true; // hide text after tube finishes
+
+// ai strip swap (“AI” | “ON”)
+bool         dynAiState     = false;   // blink state
+unsigned long dynAiPrev     = 0;       // last toggle time
+uint16_t     dynAiInterval  = 325;     // ms
+
+// serial command buffer for incoming messages
 char lineBuf[64] = {};
+
+/*
+ * When dripFeedMode is enabled, incoming serial messages are handled in
+ * a last‑one‑wins fashion.  Multiple updates received in a single
+ * iteration of handleRobotMessage() or readAndProcess() will have
+ * earlier lines dropped in favour of the most recent complete
+ * message.  This reduces backlog when sensors oscillate rapidly
+ * between states.  Set to true by default; may be toggled at runtime
+ * via Serial commands if desired.
+ */
+bool dripFeedMode = true;

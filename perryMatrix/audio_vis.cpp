@@ -5,7 +5,7 @@
 #include "src/checklist.h"
 #include "arduinoFFT.h"
 
-// — readFFT —  
+// readFFT
 void readFFT() {
   unsigned long nextMicros = micros();
   for (int i = 0; i < samples; i++) {
@@ -28,7 +28,7 @@ void readFFT() {
   }
 }
 
-// — updatePeaks —  
+// updatePeaks
 void updatePeaks() {
   unsigned long now = millis();
   for (int i = 0; i < WIDTH/3; i++) {
@@ -44,7 +44,7 @@ void updatePeaks() {
   }
 }
 
-// — getBarColor —  
+// getBarColor
 uint16_t getBarColor(int y, int h) {
   int seg = h / 3;
   if (y < seg) {
@@ -60,7 +60,7 @@ uint16_t getBarColor(int y, int h) {
   }
 }
 
-// — drawWaveform —  
+// drawWaveform
 void drawWaveform() {
   const int rawW = WIDTH, rawH = HEIGHT;
   const int midY = rawH/2 - 4, scaleY = rawH/2;
@@ -80,7 +80,7 @@ void drawWaveform() {
   }
 }
 
-// — drawBars —  
+// drawBars
 void drawBars() {
   const int rawW = WIDTH, rawH = HEIGHT;
   const int barW = 2, barGap = 1;
@@ -121,7 +121,7 @@ void drawBars() {
   }
 }
 
-// — initAudioVis —  
+// initAudioVis
 void initAudioVis() {
   pinMode(GAIN_PIN, OUTPUT);
   digitalWrite(GAIN_PIN, LOW);
@@ -142,7 +142,7 @@ void initAudioVis() {
   matrix.fillScreen(0);
 }
 
-// — runAudioVisFrame —  
+// runAudioVisFrame
 void runAudioVisFrame() {
   if (!gReadyState) {
     audioActive     = false;

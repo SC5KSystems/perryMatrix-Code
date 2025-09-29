@@ -7,10 +7,7 @@
 #include <Arduino.h>
 #include <string.h>
 
-/*/
-drawStaticHeader
-draw the "SPONS-" and "-SORS" header with divider line across top
-/*/
+// drawStaticHeader: draw "SPON-" and "-SORS" header plus divider line
 void drawStaticHeader() {
   uint16_t white = color565(255,255,255);
   const char *L1 = "SPON-", *L2 = "-SORS";
@@ -26,10 +23,7 @@ void drawStaticHeader() {
   }
 }
 
-/*/
-wheel
-return rgb565 based on pos 0..255 cycling through red→green→blue
-/*/
+// wheel: map 0–255 to an RGB565 rainbow colour
 uint16_t wheel(uint8_t pos) {
   if (pos < 85) {
     return color565(255 - pos*3, 0, pos*3);
@@ -42,10 +36,7 @@ uint16_t wheel(uint8_t pos) {
   }
 }
 
-/*/
-initSponsorScroller
-seed random, pick starting sponsor, random x position & hue, start below screen
-/*/
+// initSponsorScroller: seed random, pick sponsor, random x & hue, start below screen
 void initSponsorScroller() {
   randomSeed(analogRead(A0));
   currentSponsor = 0;
@@ -54,11 +45,7 @@ void initSponsorScroller() {
   yOffset        = matrix.height();
 }
 
-/*/
-runSponsorScroller
-clear screen, draw current sponsor vertically scrolling up with hue rainbow,
-once off-screen advance to next sponsor
-/*/
+// runSponsorScroller: scroll current sponsor upward with colour cycle then advance
 void runSponsorScroller() {
   matrix.fillScreen(0);
   const char* txt = sponsors[currentSponsor];
