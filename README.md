@@ -1,7 +1,7 @@
 # perryMatrix
 
 perryMatrix is a custom Arduino sketch built for the Adafruit Matrix Portal M4 and a 128×32 RGB Protomatter panel.  
-It listens over USB or Serial1 (RS-232), and a simple line of text is all it takes to flip the display into a new world.  
+It listens over USB or Serial1 (RS-232) and displays the relevant data on its display.
 
 There are four core functions with the included cases: 
 
