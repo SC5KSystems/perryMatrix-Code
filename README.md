@@ -1,23 +1,27 @@
-perryMatrix is a "small" Arduino sketch for a Matrix Portal M4 driving a 128×32 RGB Protomatter panel. 
-It implements three modes that you switch between by sending a line over USB or Serial1 in the form:
+# perryMatrix
 
-<mode> [payload]\n
+perryMatrix is an Arduino sketch for the Adafruit Matrix Portal M4 driving a 128×32 RGB Protomatter panel.  
+It switches modes via USB/Serial1 commands sent as:
 
-• mode 0 (“checklist”) animates a match-setup checklist 
-(see checklist.cpp for processChecklistPayload, drawChecklistStatic and related code).
-• mode 1 (“autonomous”) runs the AUTO LOCK starfield and circles animation 
-(see autonomous.cpp and runAutonomousFrame).
-• mode 2 (“dynamic”) shows a moving node network plus optional accelerometer readout, "AI" status 
-indicator and tiny 3D cube—flags are parsed by updateDynamicFromPayload and frames drawn by 
-runDynamicFrame in dynamic.cpp.
+## core modes
+- **mode 0 (checklist)** — animated match-setup checklist (`checklist.cpp`)
+- **mode 1 (autonomous)** — AUTO LOCK starfield + circles animation (`autonomous.cpp`)
+- **mode 2 (dynamic)** — moving node network with optional accel readout, AI flag and tiny 3D cube (`dynamic.cpp`)
 
-beyond those core modes there’s a sponsor scroller (sponsor_scroller.cpp), the “perry loader” text 
-obfuscation/decryption effect (perry_loader.cpp), and a real-time audio visualizer using FFT 
-(audio_vis.cpp). shared constants, pin mappings, matrix instance and global state live in matrix_config.* 
-and globals.*, while tiny utilities like color conversion, shuffling and hsv→rgb live in helpers.h.
+## secondary features
+- **shutdown** — “match over” header + scrolling fake code (`shutdown.cpp`)
+- **sponsor scroller** — scrolling sponsor banners (`sponsor_scroller.cpp`)
+- **perry loader** — text obfuscation / decrypt animation (`perry_loader.cpp`)
+- **audio visualizer** — FFT bars + peaks from mic input (`audio_vis.cpp`)
 
-to build, open perryMatrix.ino in the arduino ide, install the adafruit_gfx, adafruit_protomatter, 
-adafruit_lis3dh and arduinofft libraries, select your board and upload. all documentation lives 
-alongside each module in its *.h file.
+## structure
+- `matrix_config.*` — pinout, matrix init, constants
+- `globals.*` — global state
+- `helpers.h` — small utils (rgb565, hsv→rgb, shuffle, random chars)
+
+## build
+open `perryMatrix.ino` in Arduino IDE  
+install: `Adafruit_GFX`, `Adafruit_Protomatter`, `Adafruit_LIS3DH`, `ArduinoFFT`  
+select Matrix Portal M4 board, compile + upload
 
 © 2025 SC5K Systems
